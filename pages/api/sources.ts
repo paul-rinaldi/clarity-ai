@@ -9,6 +9,16 @@ type Data = {
   sources: Source[];
 };
 
+function encodeQueryString(query: string) {
+  return encodeURIComponent(query).replace(/%20/g, '+');
+}
+
+function generateGoogleSearchURL(query: string) {
+  const baseURL = "https://www.google.com/search?q=";
+  const encodedQuery = encodeQueryString(query);
+  return baseURL + encodedQuery;
+}
+
 const searchHandler = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
   try {
     const { query, model } = req.body as {
@@ -18,8 +28,10 @@ const searchHandler = async (req: NextApiRequest, res: NextApiResponse<Data>) =>
 
     const sourceCount = 4;
 
+    const queryUrl = generateGoogleSearchURL(query);
+
     // GET LINKS
-    const response = await fetch(`https://www.google.com/search?q=${query}`);
+    const response = await fetch(queryUrl);
     const html = await response.text();
     const $ = cheerio.load(html);
     const linkTags = $("a");
