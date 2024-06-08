@@ -9,6 +9,8 @@ type Data = {
   sources: Source[];
 };
 
+type SearchType = 'GOOGLE' | 'CONGRESS';
+
 function encodeQueryString(query: string) {
   return encodeURIComponent(query).replace(/%20/g, '+');
 }
@@ -19,7 +21,13 @@ function generateGoogleSearchURL(query: string) {
   return baseURL + encodedQuery;
 }
 
-const search = (query: string, sourceCount: number) => searchViaGoogle(query, sourceCount);
+const search = (query: string, sourceCount: number, searchType: SearchType) => {
+  switch(searchType) {
+    case 'GOOGLE': return searchViaGoogle(query, sourceCount);
+    case 'CONGRESS': return searchViaLance(query, sourceCount);
+    default: return searchViaGoogle(query, sourceCount);
+  }
+};
 
 const searchViaGoogle = async (query: string, sourceCount: number) => {
   const queryUrl = generateGoogleSearchURL(query);
@@ -71,7 +79,11 @@ const searchViaGoogle = async (query: string, sourceCount: number) => {
         }
       })
     )) as Source[];
-}
+};
+
+const searchViaLance = (query: string, sourceCount: number) => {
+  
+};
 
 const searchHandler = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
   try {
@@ -79,12 +91,15 @@ const searchHandler = async (req: NextApiRequest, res: NextApiResponse<Data>) =>
       query: string;
       model: OpenAIModel;
     };
+    const { searchType } = req.query as {
+      searchType: SearchType
+    };
 
     const sourceCount = 4;
 
-    const sources = await search(query, sourceCount);
+    const sources = await search(query, sourceCount, searchType);
 
-    const filteredSources = sources.filter((source) => source !== undefined);
+    const filteredSources = (sources as Source[]).filter((source) => source !== undefined);
 
     for (const source of filteredSources) {
       source.text = source.text.slice(0, 1500);

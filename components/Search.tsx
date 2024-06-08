@@ -1,13 +1,18 @@
 import { SearchQuery, Source } from "@/types";
 import { IconArrowRight, IconBolt, IconSearch } from "@tabler/icons-react";
 import endent from "endent";
-import { FC, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FC, KeyboardEvent, SetStateAction, useEffect, useRef, useState } from "react";
 
 interface SearchProps {
   onSearch: (searchResult: SearchQuery) => void;
   onAnswerUpdate: (answer: string) => void;
   onDone: (done: boolean) => void;
 }
+
+const options = [
+  { value: 'GOOGLE', label: 'Google' },
+  { value: 'LIBRARY', label: 'Library' },
+];
 
 export const Search: FC<SearchProps> = ({ onSearch, onAnswerUpdate, onDone }) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -16,6 +21,11 @@ export const Search: FC<SearchProps> = ({ onSearch, onAnswerUpdate, onDone }) =>
   const [apiKey, setApiKey] = useState<string>("");
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [selectedSearch, setSelectedSearch] = useState<string>('GOOGLE');
+
+  const handleSelect = (event: ChangeEvent<HTMLSelectElement>) => {
+    setSelectedSearch(event.target.value as any);
+  };
 
   const handleSearch = async () => {
     if (!query) {
@@ -145,24 +155,33 @@ export const Search: FC<SearchProps> = ({ onSearch, onAnswerUpdate, onDone }) =>
 
           {apiKey.length === 56 ? (
             <div className="relative w-full">
-              <IconSearch className="text=[#D4D4D8] absolute top-3 w-10 left-1 h-6 rounded-full opacity-50 sm:left-3 sm:top-4 sm:h-8" />
+              <div>
+                <select onChange={handleSelect} value={selectedSearch}>
+                  {options.map(obj =>
+                    <option key={obj.value} value={obj.value}>{obj.label}</option>
+                  )}
+                </select>
+              </div>
+              <div className="relative w-full">
+                <IconSearch className="text=[#D4D4D8] absolute top-3 w-10 left-1 h-6 rounded-full opacity-50 sm:left-3 sm:top-4 sm:h-8" />
 
-              <input
-                ref={inputRef}
-                className="h-12 w-full rounded-full border border-zinc-600 bg-[#2A2A31] pr-12 pl-11 focus:border-zinc-800 focus:bg-[#18181C] focus:outline-none focus:ring-2 focus:ring-zinc-800 sm:h-16 sm:py-2 sm:pr-16 sm:pl-16 sm:text-lg"
-                type="text"
-                placeholder="Ask anything..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-              />
-
-              <button>
-                <IconArrowRight
-                  onClick={handleSearch}
-                  className="absolute right-2 top-2.5 h-7 w-7 rounded-full bg-blue-500 p-1 hover:cursor-pointer hover:bg-blue-600 sm:right-3 sm:top-3 sm:h-10 sm:w-10"
+                <input
+                  ref={inputRef}
+                  className="h-12 w-full rounded-full border border-zinc-600 bg-[#2A2A31] pr-12 pl-11 focus:border-zinc-800 focus:bg-[#18181C] focus:outline-none focus:ring-2 focus:ring-zinc-800 sm:h-16 sm:py-2 sm:pr-16 sm:pl-16 sm:text-lg"
+                  type="text"
+                  placeholder="Ask anything..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
-              </button>
+
+                <button>
+                  <IconArrowRight
+                    onClick={handleSearch}
+                    className="absolute right-2 top-2.5 h-7 w-7 rounded-full bg-blue-500 p-1 hover:cursor-pointer hover:bg-blue-600 sm:right-3 sm:top-3 sm:h-10 sm:w-10"
+                  />
+                </button>
+              </div>
             </div>
           ) : (
             <div className="text-center text-[#D4D4D8]">Please enter your OpenAI API key.</div>
