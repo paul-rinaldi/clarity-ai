@@ -19,16 +19,10 @@ function generateGoogleSearchURL(query: string) {
   return baseURL + encodedQuery;
 }
 
-const searchHandler = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
-  try {
-    const { query, model } = req.body as {
-      query: string;
-      model: OpenAIModel;
-    };
+const search = (query: string, sourceCount: number) => searchViaGoogle(query, sourceCount);
 
-    const sourceCount = 4;
-
-    const queryUrl = generateGoogleSearchURL(query);
+const searchViaGoogle = async (query: string, sourceCount: number) => {
+  const queryUrl = generateGoogleSearchURL(query);
 
     // GET LINKS
     const response = await fetch(queryUrl);
@@ -62,7 +56,7 @@ const searchHandler = async (req: NextApiRequest, res: NextApiResponse<Data>) =>
     const finalLinks = filteredLinks.slice(0, sourceCount);
 
     // SCRAPE TEXT FROM LINKS
-    const sources = (await Promise.all(
+    return (await Promise.all(
       finalLinks.map(async (link) => {
         const response = await fetch(link);
         const html = await response.text();
@@ -77,6 +71,18 @@ const searchHandler = async (req: NextApiRequest, res: NextApiResponse<Data>) =>
         }
       })
     )) as Source[];
+}
+
+const searchHandler = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
+  try {
+    const { query, model } = req.body as {
+      query: string;
+      model: OpenAIModel;
+    };
+
+    const sourceCount = 4;
+
+    const sources = await search(query, sourceCount);
 
     const filteredSources = sources.filter((source) => source !== undefined);
 
