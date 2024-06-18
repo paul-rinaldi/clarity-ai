@@ -86,29 +86,36 @@ const searchViaLance = (query: string, sourceCount: number) => {
 };
 
 const searchHandler = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
-  try {
-    const { query, model } = req.body as {
-      query: string;
-      model: OpenAIModel;
-    };
-    const { searchType } = req.query as {
-      searchType: SearchType
-    };
-
-    const sourceCount = 4;
-
-    const sources = await search(query, sourceCount, searchType);
-
-    const filteredSources = (sources as Source[]).filter((source) => source !== undefined);
-
-    for (const source of filteredSources) {
-      source.text = source.text.slice(0, 1500);
-    }
-
-    res.status(200).json({ sources: filteredSources });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ sources: [] });
+  switch(req.method) {
+    case 'GET':
+      try {
+        const { query, model } = req.body as {
+          query: string;
+          model: OpenAIModel;
+        };
+        const { searchType } = req.query as {
+          searchType: SearchType
+        };
+    
+        const sourceCount = 4;
+    
+        const sources = await search(query, sourceCount, searchType);
+    
+        const filteredSources = (sources as Source[]).filter((source) => source !== undefined);
+    
+        for (const source of filteredSources) {
+          source.text = source.text.slice(0, 1500);
+        }
+    
+        res.status(200).json({ sources: filteredSources });
+      } catch (err) {
+        console.log(err);
+        res.status(500).json({ sources: [] });
+      }
+      break;
+    case 'POST':
+      // setup the db?
+      break;
   }
 };
 
